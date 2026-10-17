@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f35">
+  <title>BGAI | Student Exam Registration</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='regform-styles.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="brand">
+      <div class="brand-mark" aria-hidden="true">B</div>
+      <div><p class="eyebrow">BEST GRADE AID INITIATIVE</p><h1>Student exam registration 2026</h1></div>
+    </header>
+    <section class="intro"><p>Complete your details and choose your examination subjects.</p><span class="required-note">* Required fields</span></section>
+    {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+    <form action="/register" method="post" id="registration-form">
+      <section class="form-section">
+        <div class="section-heading"><span class="step">01</span><div><h2>Student details</h2><p>Enter the student’s contact information.</p></div></div>
+        <div class="field-grid">
+          <label>First name <span>*</span><input name="first_name" autocomplete="given-name" required maxlength="80" value="{{ values.get('first_name','') }}"></label>
+          <label>Middle name <small>Optional</small><input name="middle_name" autocomplete="additional-name" maxlength="80" value="{{ values.get('middle_name','') }}"></label>
+          <label>Last name <span>*</span><input name="last_name" autocomplete="family-name" required maxlength="80" value="{{ values.get('last_name','') }}"></label>
+          <label>Email address <span>*</span><input name="email" type="email" autocomplete="email" required maxlength="254" value="{{ values.get('email','') }}"></label>
+          <label>Phone number <span>*</span><input name="phone" type="tel" autocomplete="tel" required maxlength="30" value="{{ values.get('phone','') }}"></label>
+          <label>Current class <span>*</span><select name="student_class" required><option value="">Choose class</option>{% for cls in ['SS1','SS2','SS3'] %}<option value="{{ cls }}" {% if values.get('student_class')==cls %}selected{% endif %}>{{ cls }}</option>{% endfor %}</select></label>
+        </div>
+      </section>
+      <section class="form-section">
+        <div class="section-heading"><span class="step">02</span><div><h2>Department &amp; subjects</h2><p>Choose a department, then select up to five subjects.</p></div></div>
+        <label class="department-field">Department <span>*</span><select name="department" id="department" required><option value="">Choose department</option>{% for dept in departments %}<option value="{{ dept }}" {% if values.get('department')==dept %}selected{% endif %}>{{ dept }}</option>{% endfor %}</select></label>
+        <div class="subjects-heading"><div><h3>Available subjects</h3><p>English and Mathematics are compulsory.</p></div><span class="counter" id="subject-counter">0 / 5 selected</span></div>
+        <div class="subjects" id="subjects"></div>
+        <p class="subject-hint" id="subject-hint">Select a department to see available subjects.</p>
+      </section>
+      <div class="form-footer"><p>Your exam number and printable registration form will be issued after registration.</p><button type="submit" class="submit-button">Complete registration <span aria-hidden="true">→</span></button></div>
+    </form>
+    <footer>Best Grade Aid Initiative <span>•</span> Student examination registration</footer>
+  </main>
+  <script>
+    const subjectsByDepartment = {{ subjects_by_department|tojson }};
+    const previouslySelected = new Set({{ values.get('subjects', [])|tojson }});
+    const common = ['English', 'Mathematics'];
+    const department = document.getElementById('department');
+    const subjectGrid = document.getElementById('subjects');
+    const counter = document.getElementById('subject-counter');
+    const hint = document.getElementById('subject-hint');
+    function renderSubjects() {
+      const dept = department.value;
+      subjectGrid.innerHTML = '';
+      if (!dept) { hint.hidden = false; counter.textContent = '0 / 6 selected'; return; }
+      hint.hidden = true;
+      [...common, ...(subjectsByDepartment[dept] || [])].forEach((subject) => {
+        const label = document.createElement('label');
+        label.className = 'subject-option' + (common.includes(subject) ? ' compulsory' : '');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox'; checkbox.name = 'subjects'; checkbox.value = subject;
+        checkbox.checked = common.includes(subject) || previouslySelected.has(subject);
+        checkbox.required = common.includes(subject);
+        checkbox.addEventListener('change', () => { previouslySelected.clear(); subjectGrid.querySelectorAll('input:checked').forEach((item) => previouslySelected.add(item.value)); updateCounter(); });
+        label.append(checkbox, Object.assign(document.createElement('span'), {textContent: subject}));
+        if (common.includes(subject)) label.insertAdjacentHTML('beforeend', '<em>Compulsory</em>');
+        subjectGrid.append(label);
+      });
+      updateCounter();
+    }
+    function updateCounter() {
+      const checked = subjectGrid.querySelectorAll('input:checked').length;
+      counter.textContent = `${checked} / 6 selected`;
+      counter.classList.toggle('limit', checked >= 6);
+      subjectGrid.querySelectorAll('input:not(:checked)').forEach((item) => { item.disabled = checked >= 6; });
+    }
+    department.addEventListener('change', () => { previouslySelected.clear(); renderSubjects(); });
+    document.getElementById('registration-form').addEventListener('submit', (event) => {
+      if (subjectGrid.querySelectorAll('input:checked').length < 2) { event.preventDefault(); hint.hidden = false; hint.textContent = 'Select the compulsory English and Mathematics subjects.'; }
+    });
+    renderSubjects();
+  </script>
+</body>
+</html>

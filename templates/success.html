@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Registration complete | BGAI</title><link rel="stylesheet" href="{{ url_for('static', path='regform-styles.css') }}"></head>
+<body><main class="page-shell success-shell"><header class="brand"><div class="brand-mark" aria-hidden="true">B</div><div><p class="eyebrow">BEST GRADE AID INITIATIVE</p><h1>Registration complete</h1></div></header>
+<section class="success-card"><div class="success-icon" aria-hidden="true">✓</div><p class="eyebrow">YOU’RE REGISTERED</p><h2>{{ student.first_name }}, your registration is confirmed.</h2><p class="success-copy">Your exam number has been assigned. Download your registration form and keep it for your records.</p><div class="exam-number"><span>EXAM NUMBER</span><strong>{{ student.exam_number }}</strong></div>
+<div class="summary"><div><span>Student</span><strong>{{ student.first_name }} {% if student.middle_name %}{{ student.middle_name }} {% endif %}{{ student.last_name }}</strong></div><div><span>Class &amp; department</span><strong>{{ student.student_class }} · {{ student.department }}</strong></div><div><span>Subjects ({{ student.subjects|length }})</span><strong>{{ student.subjects|join(', ') }}</strong></div></div>
+<a class="submit-button download-button" href="/students/{{ student.download_token }}/registration.pdf" download>Download registration PDF <span aria-hidden="true">↓</span></a><a class="back-link" href="/">Register another student</a></section><footer>Best Grade Aid Initiative <span>•</span> Student examination registration</footer></main></body></html>
+
+
